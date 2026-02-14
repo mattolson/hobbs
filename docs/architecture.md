@@ -42,16 +42,19 @@ For people working on the Hobbs framework itself. They clone the repo and use th
     foundation.md
     memory/
     playbooks/
+    skills/                        # User-created skills
     vault/
 ```
 
-Claude Code discovers CLAUDE.md files by walking up the directory tree. From `/home/dev/hobbs/workspace/my-project/`, it loads:
+Claude Code discovers CLAUDE.md files and skills by walking up the directory tree. From `/home/dev/hobbs/workspace/my-project/`, it loads:
 
 1. `my-project/.claude/CLAUDE.md` - project-specific instructions
 2. `/home/dev/hobbs/.claude/CLAUDE.md` - Hobbs agent identity
 3. `/home/dev/.claude/CLAUDE.md` - user's global preferences
 
 All three are additive. Nothing is overwritten or hidden.
+
+Skills follow the same discovery pattern. `~/.hobbs/skills/` is not an ancestor of the working directory, so Claude Code cannot discover it directly. At shell startup, `hobbs-init.sh` symlinks `~/.hobbs/skills/` to `~/hobbs/workspace/.claude/skills/` if it exists, making instance-level skills discoverable alongside framework skills.
 
 ## System Overview
 
@@ -147,6 +150,8 @@ All three are additive. Nothing is overwritten or hidden.
         SKILL.md
       review-playbooks/
         SKILL.md
+    shell.d/
+      hobbs-init.sh                # Startup script (instance skill linking)
     templates/
       playbook.md                  # Playbook template
   dist/                            # Deployment artifacts
@@ -185,6 +190,7 @@ On the host, instance data follows the [XDG Base Directory Specification](https:
     active/                        # Loaded at session start
     archive/                       # Searchable but not auto-loaded
   playbooks/                       # Documented workflows
+  skills/                          # User-created skills (symlinked at startup)
   agents/
     hobbs/
       operational.md               # Hobbs operational learnings
