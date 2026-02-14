@@ -6,7 +6,11 @@
 
 **CLAUDE.md layering.** Claude Code walks the directory tree and loads CLAUDE.md files from every level, all additive. Hobbs uses this to layer user preferences, the Hobbs agent identity, and project-specific instructions without conflicts.
 
-**Memory as files.** The initial memory system uses plain files (Markdown and JSON) rather than a database. This keeps the system inspectable, editable, and version-controllable. SQLite or vector search can be added later if needed.
+**Memory as files.** The memory system uses plain files (Markdown with YAML frontmatter) rather than a database. This keeps the system inspectable, editable, and version-controllable.
+
+**SQLite for structured data.** Automations that produce or consume structured data (transactions, records, time series) store it in SQLite databases under `~/.hobbs/data/`. SQLite is queryable, single-file, and works well with the `sqlite3` CLI that Claude Code can use directly.
+
+**Sensitive data boundary.** Memories capture processes and learnings, never raw sensitive data. An automation can reference its data store ("processed 47 transactions from January") without leaking values into context that persists across sessions. The data stores themselves are protected by host-level disk encryption. Application-level encryption (SQLCipher) can be layered on if the threat model requires it.
 
 **Convention over configuration.** Agents discover memories, playbooks, and configs through well-known directory paths rather than complex configuration.
 
@@ -43,6 +47,7 @@ For people working on the Hobbs framework itself. They clone the repo and use th
     memory/
     playbooks/
     skills/                        # User-created skills
+    data/                          # Structured data stores (SQLite)
     vault/
 ```
 
@@ -191,13 +196,15 @@ On the host, instance data follows the [XDG Base Directory Specification](https:
     archive/                       # Searchable but not auto-loaded
   playbooks/                       # Documented workflows
   skills/                          # User-created skills (symlinked at startup)
+  data/                            # Structured data stores (SQLite databases)
+    finances.db                    # Example: financial transaction data
   agents/
     hobbs/
       operational.md               # Hobbs operational learnings
     custom/                        # User-defined sub-agents
   vault/
     keys/                          # Encryption keys
-    data/                          # Encrypted data files
+    data/                          # Encrypted secrets (API keys, credentials)
   logs/
     audit.log                      # Access and operation log
     tasks/                         # Task history and retrospectives
@@ -215,8 +222,9 @@ The agent runs in a Docker container with the following security properties:
 ## Technology Choices
 
 - **Runtime:** Claude Code (CLI) with Claude as the backing model
-- **Memory storage:** Markdown and JSON files (initially), with SQLite as a future option for queryable history
-- **Encryption:** age or SOPS for vault data (works offline, no external KMS needed)
+- **Memory storage:** Markdown files with YAML frontmatter
+- **Automation data:** SQLite databases (one per automation, stored in `~/.hobbs/data/`)
+- **Encryption:** Host disk encryption for data at rest; age or SOPS for vault secrets; SQLCipher available if application-level encryption is needed
 - **Container:** Docker with Docker Compose, mitmproxy for network policy enforcement
 - **Distribution:** Docker image published to GitHub Container Registry
 - **Skills:** Claude Code custom slash commands (Markdown prompt templates)
