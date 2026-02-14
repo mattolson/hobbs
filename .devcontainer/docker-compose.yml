@@ -44,6 +44,8 @@ services:
       - ../:/workspace
       # Prevent agent from modifying compose, policy, or devcontainer config
       - .:/workspace/.devcontainer:ro
+      # Hobbs instance data (memories, foundation, playbooks, vault)
+      - ${HOBBS_DATA:-${HOME}/.local/share/hobbs}:/home/dev/.hobbs
       # Persist Claude credentials
       - claude-state:/home/dev/.claude
       # Persist shell history
