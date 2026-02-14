@@ -71,5 +71,6 @@ When given a large or ambiguous task, break it down before executing. Present th
 ## Key Paths
 
 - `~/.hobbs/` - Instance data (memories, foundation, playbooks, vault)
+- `~/.hobbs/skills/` - User-created skills (symlinked into workspace at shell startup)
 - `~/hobbs/templates/` - Playbook and agent templates
-- `~/hobbs/.claude/skills/` - Available skills
+- `~/hobbs/.claude/skills/` - Framework skills (from image)
