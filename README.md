@@ -27,7 +27,7 @@ Hobbs separates the framework (this repo) from instance data (your personal memo
   docs/                          # Documentation
   .claude/skills/                # Claude Code skills
 
-~/.hobbs/                        # Instance data (private, per-user volume)
+~/.local/share/hobbs/            # Instance data (private, bind mount)
   foundation.md                  # Core values, principles, long-term goals
   config.yaml                    # Personal configuration
   claude.md                      # Personal instruction overlay
@@ -51,6 +51,9 @@ Hobbs separates the framework (this repo) from instance data (your personal memo
 git clone https://github.com/mattolson/hobbs.git
 cd hobbs
 
+# Create your instance data directory
+mkdir -p ~/.local/share/hobbs
+
 # Start the sandbox
 docker compose up -d
 docker compose exec agent zsh
@@ -62,12 +65,15 @@ docker compose exec agent zsh
 claude
 ```
 
+See [Setup](docs/setup.md) for details on instance data, backups, file permissions, and custom data paths.
+
 ## Sandbox Environment
 
 Hobbs runs inside [agent-sandbox](https://github.com/mattolson/agent-sandbox), which provides a secure execution environment for AI agents. The container enforces network restrictions through a proxy with an allowlist defined in `.devcontainer/policy.yaml`. All outbound traffic must pass through this proxy, preventing unauthorized network access. See the agent-sandbox documentation for details on the security model.
 
 ## Documentation
 
+- [Setup](docs/setup.md) - installation, instance data, backups
 - [Roadmap](docs/roadmap.md) - project milestones and plan
 - [Architecture](docs/architecture.md) - system design and data flow
 - [Memory System](docs/memory.md) - how persistent memory works

@@ -37,7 +37,7 @@
 |                                                   |
 |  Volumes:                                         |
 |  /workspace        -> framework repo (shared)     |
-|  ~/.hobbs          -> instance data (private)     |
+|  ~/.hobbs          -> instance data (bind mount)  |
 |  ~/.claude         -> Claude Code state           |
 +--------------------------------------------------+
          |
@@ -109,10 +109,13 @@
   tests/                         # Tests
 ```
 
-### Instance Data (private: ~/.hobbs)
+### Instance Data
+
+On the host, instance data follows the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/latest/) and defaults to `~/.local/share/hobbs/`. Inside the container, it is bind-mounted at `~/.hobbs`. All agent code and documentation references use the container path (`~/.hobbs`).
 
 ```
-~/.hobbs/
+~/.local/share/hobbs/   (host)
+~/.hobbs/               (container)
   foundation.md                  # Core values, principles, long-term goals
   config.yaml                    # Instance configuration
   claude.md                      # Personal instruction overlay
