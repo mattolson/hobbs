@@ -40,7 +40,11 @@ Memory content here.
 
 ### Sensitive Data Boundary
 
-Never store sensitive data (financial figures, credentials, personal identifiers) in memory files. Memories capture processes and learnings, not the data itself.
+Never store sensitive data (financial figures, credentials, personal identifiers) in memory files. Memories capture processes and learnings, not the data itself. When referencing data from an automation, summarize ("processed 47 transactions") rather than including raw values.
+
+### Data Stores
+
+Automations that produce or consume structured data use SQLite databases in `~/.hobbs/data/`. Each automation gets its own database file (e.g. `~/.hobbs/data/finances.db`). Use the `sqlite3` CLI to create, query, and manage these databases.
 
 ### Task Delegation
 
@@ -70,7 +74,8 @@ When given a large or ambiguous task, break it down before executing. Present th
 
 ## Key Paths
 
-- `~/.hobbs/` - Instance data (memories, foundation, playbooks, vault)
+- `~/.hobbs/` - Instance data (memories, foundation, playbooks, data, vault)
 - `~/.hobbs/skills/` - User-created skills (symlinked into workspace at shell startup)
+- `~/.hobbs/data/` - Structured data stores (SQLite databases)
 - `~/hobbs/templates/` - Playbook and agent templates
 - `~/hobbs/.claude/skills/` - Framework skills (from image)
