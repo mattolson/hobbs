@@ -6,6 +6,7 @@ on:
     paths:
       - "src/**"
       - "dist/Dockerfile"
+      - ".github/workflows/build-image.yml"
   workflow_dispatch:
 
 env:
@@ -42,7 +43,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=latest
+            type=raw,value=latest,enable={{is_default_branch}}
             type=sha,prefix=sha-,format=short
 
       - name: Build and push
@@ -54,3 +55,5 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
