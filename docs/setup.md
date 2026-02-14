@@ -4,60 +4,94 @@
 
 - Docker and Docker Compose
 - A Claude API key or Claude Pro/Max subscription
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI
 
-## Installation
+Claude Code is pre-installed in the Hobbs Docker image. You do not need to install it on your host.
 
-```bash
-git clone https://github.com/mattolson/hobbs.git
-cd hobbs
-```
-
-## Instance Data Directory
-
-Hobbs stores personal data following the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/latest/). The default location is:
-
-```
-~/.local/share/hobbs/
-```
-
-Create it before starting the container:
+## Quick Start
 
 ```bash
-mkdir -p ~/.local/share/hobbs
-```
+# Create directories
+mkdir -p ~/.local/share/hobbs ~/hobbs/workspace
 
-This directory stores your personal data (memories, foundation, playbooks, vault). It is bind-mounted into the container at `/home/dev/.hobbs` and persists across container rebuilds, restarts, and `docker compose down`.
+# Get the compose file and network policy
+curl -o ~/hobbs/docker-compose.yml <release-url>/docker-compose.yml
+curl -o ~/hobbs/policy.yaml <release-url>/policy.yaml
 
-The directory is not part of the git repo and is never shared.
-
-## Starting the Sandbox
-
-```bash
+# Start Hobbs
+cd ~/hobbs
 docker compose up -d
-docker compose exec agent zsh
+docker compose exec hobbs zsh
 claude
 ```
 
+## Directories
+
+Hobbs uses two host directories:
+
+### Hobbs Directory (~/hobbs)
+
+The top-level directory contains the compose file and network policy. The `workspace/` subdirectory is where you and Hobbs collaborate on files. Only the workspace subdirectory is bind-mounted into the container.
+
+```
+~/hobbs/
+  docker-compose.yml    # Container configuration
+  policy.yaml           # Network allowlist
+  workspace/            # Shared working directory (bind-mounted)
+```
+
+Inside the container, `~/hobbs/workspace/` mounts at `/home/dev/hobbs/workspace/`.
+
+### Instance Data (~/.local/share/hobbs)
+
+Your personal data: memories, foundation, playbooks, vault. This follows the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/latest/).
+
+Inside the container, this mounts at `/home/dev/.hobbs/`.
+
+This is the data you want to protect and back up. See Backups below.
+
+## Configuration
+
+Environment variables control host paths:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `WORKSPACE` | `~/hobbs/workspace` | Shared working directory |
+| `HOBBS_DATA` | `~/.local/share/hobbs` | Instance data |
+| `TZ` | `America/Los_Angeles` | Timezone |
+
+Example with custom paths:
+
+```bash
+WORKSPACE=~/projects HOBBS_DATA=~/my-hobbs-data docker compose up -d
+```
+
+## User-Level Claude Config
+
+If you have an existing `~/.claude/CLAUDE.md`, `settings.json`, or skills on your host, these flow into the container through the [agent-sandbox dotfiles mechanism](https://github.com/mattolson/agent-sandbox). Place them in:
+
+```
+~/.config/agent-sandbox/dotfiles/.claude/
+```
+
+These are mounted read-only and apply globally inside the container. Hobbs layers its own identity on top without modifying your global config.
+
 ## Backups
 
-Your instance data lives at `~/.local/share/hobbs` on the host. Back it up however you back up any important directory:
+Instance data lives at `~/.local/share/hobbs` on the host. Back it up like any directory:
 
 ```bash
 # Simple copy
 cp -r ~/.local/share/hobbs ~/.local/share/hobbs-backup-$(date +%Y%m%d)
 
-# Or add to your existing backup system, rsync, etc.
+# Or use your existing backup system
 rsync -a ~/.local/share/hobbs/ /path/to/backup/hobbs/
 ```
 
-Since the data is just files on your host filesystem, it works with any backup tool. Consider backing up before major changes or periodically on a schedule.
-
 ## Data Safety
 
-Unlike Docker volumes, your instance data will not be deleted by:
+Instance data is a bind mount, not a Docker volume. It will not be deleted by:
 
-- `docker compose down` (even with `-v` flag, which only removes Docker volumes)
+- `docker compose down` (even with `-v`)
 - `docker system prune --volumes`
 - Deleting and recreating the compose project
 - Rebuilding or replacing the container image
@@ -66,7 +100,7 @@ The only way to lose this data is to delete `~/.local/share/hobbs` on the host.
 
 ## File Permissions
 
-The container runs as user `dev` (UID 500). If your host user has a different UID, you may need to adjust ownership:
+The container runs as user `dev` (UID 500). If your host user has a different UID, adjust ownership:
 
 ```bash
 # Check your UID
@@ -76,17 +110,10 @@ id -u
 sudo chown -R 500:500 ~/.local/share/hobbs
 ```
 
-## Custom Instance Data Path
+## Network Policy
 
-To store instance data somewhere other than the default, set the `HOBBS_DATA` environment variable before starting the container:
+The proxy enforces an allowlist defined in `policy.yaml`. By default, only GitHub and Claude API traffic is allowed. To add services for your workflows, edit `policy.yaml` and restart the proxy:
 
 ```bash
-export HOBBS_DATA=/path/to/your/data
-docker compose up -d
+docker compose restart proxy
 ```
-
-Resolution order:
-1. `HOBBS_DATA` if set
-2. `~/.local/share/hobbs` (XDG default)
-
-If you have a non-default `XDG_DATA_HOME`, set `HOBBS_DATA` to `${XDG_DATA_HOME}/hobbs`.

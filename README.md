@@ -15,61 +15,69 @@ The framework is designed to learn and adapt over time. Through a persistent mem
 - **Instance data separation** keeping personal data outside the public framework repo
 - **Secure execution environment** via [agent-sandbox](https://github.com/mattolson/agent-sandbox) with network isolation and proxy-enforced allowlists
 
-## Architecture
+## Using Hobbs
 
-Hobbs separates the framework (this repo) from instance data (your personal memories, playbooks, vault, and agent customizations).
-
-```
-/workspace/                      # Framework (public repo)
-  templates/                     # Reusable templates (playbooks, agents)
-  src/                           # Framework code
-  agents/                        # Agent definitions
-  docs/                          # Documentation
-  .claude/skills/                # Claude Code skills
-
-~/.local/share/hobbs/            # Instance data (private, bind mount)
-  foundation.md                  # Core values, principles, long-term goals
-  config.yaml                    # Personal configuration
-  claude.md                      # Personal instruction overlay
-  memory/                        # Memories (preferences, projects, retrospectives)
-  playbooks/                     # Documented workflows
-  agents/                        # Personal agent customizations
-  vault/                         # Encrypted sensitive data
-  logs/                          # Audit and task history
-```
-
-## Prerequisites
-
-- Docker and Docker Compose
-- A Claude API key or Claude Pro/Max subscription
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI
-
-## Getting Started
+You do not need to clone this repo to use Hobbs. The Hobbs agent is distributed as a Docker image.
 
 ```bash
-# Clone the repo
-git clone https://github.com/mattolson/hobbs.git
-cd hobbs
+# Create directories
+mkdir -p ~/.local/share/hobbs ~/hobbs/workspace
 
-# Create your instance data directory
-mkdir -p ~/.local/share/hobbs
+# Download the compose file and network policy
+curl -o ~/hobbs/docker-compose.yml <release-url>/docker-compose.yml
+curl -o ~/hobbs/policy.yaml <release-url>/policy.yaml
 
-# Start the sandbox
+# Start Hobbs
+cd ~/hobbs
 docker compose up -d
-docker compose exec agent zsh
-
-# Initialize your instance data
-# hobbs init - NOT IMPLEMENTED YET
-
-# Start Claude Code
+docker compose exec hobbs zsh
 claude
 ```
 
-See [Setup](docs/setup.md) for details on instance data, backups, file permissions, and custom data paths.
+See [Setup](docs/setup.md) for details on instance data, backups, file permissions, and configuration.
 
-## Sandbox Environment
+## Developing the Framework
 
-Hobbs runs inside [agent-sandbox](https://github.com/mattolson/agent-sandbox), which provides a secure execution environment for AI agents. The container enforces network restrictions through a proxy with an allowlist defined in `.devcontainer/policy.yaml`. All outbound traffic must pass through this proxy, preventing unauthorized network access. See the agent-sandbox documentation for details on the security model.
+To work on the Hobbs framework itself:
+
+```bash
+git clone https://github.com/mattolson/hobbs.git
+cd hobbs
+docker compose up -d
+docker compose exec agent zsh
+claude
+```
+
+This uses the devcontainer setup in `.devcontainer/`, which mounts the repo as the workspace with developer-specific instructions. See [Contributing](docs/contributing.md) for details.
+
+## Architecture
+
+Hobbs separates the framework (this repo) from the distributed image and from each user's instance data.
+
+```
+Framework repo                   # Source code, agent definitions, docs
+  src/                           # Source files (single source of truth)
+    agents/hobbs/CLAUDE.md       # Hobbs agent identity
+    skills/                      # Skills
+    templates/                   # Templates
+  dist/                          # Deployment artifacts (Dockerfile, compose, policy)
+
+Docker image (ghcr.io/mattolson/hobbs)
+  ~/hobbs/.claude/CLAUDE.md      # Hobbs agent identity (baked in)
+  ~/hobbs/.claude/skills/        # Hobbs skills (baked in)
+  ~/hobbs/templates/             # Templates (baked in)
+  ~/hobbs/workspace/             # Mount point for user's shared directory
+
+User's host
+  ~/.local/share/hobbs/          # Instance data (bind mount)
+  ~/hobbs/workspace/              # Shared working directory (bind mount)
+  ~/.config/agent-sandbox/       # Global Claude config via dotfiles
+```
+
+Claude Code configuration layers (bottom to top, all additive):
+1. `~/.claude/CLAUDE.md` - user's global preferences (via dotfiles)
+2. `~/hobbs/.claude/CLAUDE.md` - Hobbs agent identity (from image)
+3. Project `.claude/CLAUDE.md` - project-specific instructions (if any)
 
 ## Documentation
 
