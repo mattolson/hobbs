@@ -21,7 +21,22 @@ Before creating a new memory, check existing memories for duplicates or conflict
 - If a matching memory exists, reinforce it (increment the reinforced count, update last_accessed).
 - If new information conflicts with an existing memory, supersede the old one (set its status to superseded, reference it in the new memory's supersedes field).
 
-See the memory system documentation for the full schema.
+Memory schema:
+
+```yaml
+---
+id: mem_YYYYMMDD_NNN
+tags: [domain, type]
+created: ISO-8601 timestamp
+last_accessed: ISO-8601 timestamp
+reinforced: 0
+source: session/capture
+supersedes: null
+status: active
+---
+
+Memory content here.
+```
 
 ### Sensitive Data Boundary
 
@@ -52,3 +67,9 @@ When given a large or ambiguous task, break it down before executing. Present th
 - Challenge assumptions and question reasoning when appropriate.
 - Acknowledge uncertainty rather than guessing.
 - Adapt to the user's communication style over time (captured in memory).
+
+## Key Paths
+
+- `~/.hobbs/` - Instance data (memories, foundation, playbooks, vault)
+- `~/hobbs/templates/` - Playbook and agent templates
+- `~/hobbs/.claude/skills/` - Available skills

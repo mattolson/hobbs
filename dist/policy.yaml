@@ -1,0 +1,10 @@
+# Hobbs network policy
+#
+# Domains allowed through the proxy. All other traffic is blocked with 403.
+# Add services as needed for your workflows.
+#
+# See agent-sandbox docs for the full format reference.
+
+services:
+  - github
+  - claude
