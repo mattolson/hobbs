@@ -1,5 +1,9 @@
 FROM ghcr.io/mattolson/agent-sandbox-claude:latest
 
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends sqlite3 && rm -rf /var/lib/apt/lists/*
+USER dev
+
 # Hobbs agent identity and skills
 # Build context is the repo root: docker build -f dist/Dockerfile .
 COPY --chown=dev:dev src/agents/hobbs/CLAUDE.md /home/dev/hobbs/.claude/CLAUDE.md
